@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Product index{% endblock %}
+
+{% block body %}
+    {% for array in cart %}
+
+        <td> {{ array.name }} </td>
+        <td> {{ array.price }} </td>
+        <td> {{ array.aantal }} </td>
+
+    {% else %}
+        <tr>
+            <td colspan="3">no records found</td>
+        </tr>
+    {% endfor %}
+{% endblock %}
