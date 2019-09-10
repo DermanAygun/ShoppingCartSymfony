@@ -4,6 +4,9 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Form\ProductType;
+use App\Form\CheckoutType;
+
+
 use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,10 +31,47 @@ class ProductController extends AbstractController
     /**
      * @Route("/", name="product_index", methods={"GET"})
      */
-    public function index(ProductRepository $productRepository): Response
+    public function index(ProductRepository $productRepository,$name, \Swift_Mailer $mailer): Response
     {
+        $message = (new \Swift_Message('Hello Email'))
+            ->setFrom('send@example.com')
+            ->setTo('recipient@example.com')
+            ->setBody(
+                $this->renderView(
+                // templates/emails/registration.html.twig
+                    'emails/registration.html.twig',
+                    ['name' => $name]
+                ),
+                'text/html'
+            )
+
+            // you can remove the following code if you don't define a text version for your emails
+            ->addPart(
+                $this->renderView(
+                    'emails/registration.txt.twig',
+                    ['name' => $name]
+                ),
+                'text/plain'
+            )
+        ;
+
+        $mailer->send($message);
+
         return $this->render('product/index.html.twig', [
             'products' => $productRepository->findAll(),
+        ]);
+    }
+
+    /**
+     * @Route("/checkout", name="product_checkout", methods={"GET"})
+     */
+    public function checkout()
+    {
+        $form = $this->createForm(CheckoutType::class);
+
+
+        return $this->render('product/checkout.html.twig', [
+            'checkout' => $form->createView()
         ]);
     }
 
@@ -58,11 +98,15 @@ class ProductController extends AbstractController
         ]);
     }
 
+
+
     /**
      * @Route("/{id}", name="product_show", methods={"GET"})
      */
     public function show(Product $product): Response
     {
+        $this->session = $session;
+
         return $this->render('product/show.html.twig', [
             'product' => $product,
         ]);
@@ -105,27 +149,30 @@ class ProductController extends AbstractController
     /**
      * @Route("/cart/{id}", name="product_add_to_cart", methods={"GET","POST"})
      */
-    public function addtocart(Product $product, $id)
+    public function addtocart(Product $product)
     {
         $getCart = $this->session->get('cart');
 
-        if(isset($getCart[$id])){
-            $getCart[$id]['aantal']++;
+        if(isset($getCart[$product->getId()])){
+            $getCart[$product->getId()]['aantal']++;
         }
         else{
-            $getCart[$id] = array(
+            $getCart[$product->getId()] = array(
                 'aantal' => 1,
                 'name' =>$product-> getName(),
-                'price' => $product->getImage(),
+                'price' => $product->getPrice(),
                 'id' =>$product->getId(),
             );
         }
         $this->session->set('cart', $getCart);
-     //   var_dump($this->session->get('cart'));
+
         return $this->render('product/add_to_cart.html.twig',[
-        'product' => $getCart[$id]['name'],
-        'aantal' => $getCart[$id]['aantal'],
+        'product' => $getCart[$product->getId()]['name'],
+        'price' => $getCart[$product->getId()]['price'],
+        'aantal' => $getCart[$product->getId()]['aantal'],
         'cart' => $getCart
         ]);
     }
 }
+
+

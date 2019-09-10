@@ -3,15 +3,19 @@
 {% block title %}Product index{% endblock %}
 
 {% block body %}
+    {% set total_price = 0 %}
     {% for array in cart %}
-
         <td> {{ array.name }} </td>
         <td> {{ array.price }} </td>
         <td> {{ array.aantal }} </td>
-
+        {% set total_price = total_price + (array.aantal *  array.price ) %}
     {% else %}
         <tr>
             <td colspan="3">no records found</td>
         </tr>
     {% endfor %}
-{% endblock %}
+    <p>Total Price: {{ total_price }}</p>
+
+    <a href="{{ path('product_checkout') }}"><button>Checkout</button></a>
+
+{% endblock %}a
